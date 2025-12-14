@@ -8,14 +8,14 @@ interface SolaceLog {
   user_txt: string | null;
   ai_response: string | null;
   emotion_state: {
-    grief: number;
+    vuln: number;
+    conf: number;
     trust: number;
+    adm: number;
+    grief: number;
+    hap: number;
     fear: number;
-    joy: number;
-    surprise: number;
-    sadness: number;
-    anger: number;
-    anticipation: number;
+    cour: number;
   };
   trust_score: number | null;
 }
@@ -97,14 +97,14 @@ export const useSolaceLogs = () => {
   const latestEmotionState = logs.length > 0 
     ? logs[logs.length - 1].emotion_state 
     : {
-        grief: 0.5,
+        vuln: 0.5,
+        conf: 0.5,
         trust: 0.5,
+        adm: 0.5,
+        grief: 0.5,
+        hap: 0.5,
         fear: 0.5,
-        joy: 0.5,
-        surprise: 0.5,
-        sadness: 0.5,
-        anger: 0.5,
-        anticipation: 0.5,
+        cour: 0.5,
       };
 
   // Get latest trust score

@@ -1,29 +1,40 @@
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, Radar } from 'recharts';
 
 interface EmotionState {
-  grief: number;
+  vuln: number;
+  conf: number;
   trust: number;
+  adm: number;
+  grief: number;
+  hap: number;
   fear: number;
-  joy: number;
-  surprise: number;
-  sadness: number;
-  anger: number;
-  anticipation: number;
+  cour: number;
 }
 
 interface EmotionRadarProps {
   emotionState: EmotionState;
 }
 
+const emotionLabels: Record<string, string> = {
+  vuln: 'Vulnerability',
+  conf: 'Confusion',
+  trust: 'Trust',
+  adm: 'Admiration',
+  grief: 'Grief',
+  hap: 'Happiness',
+  fear: 'Fear',
+  cour: 'Courage',
+};
+
 const emotionColors: Record<string, string> = {
-  grief: 'hsl(210, 100%, 55%)',
+  vuln: 'hsl(280, 80%, 60%)',
+  conf: 'hsl(220, 60%, 45%)',
   trust: 'hsl(45, 100%, 50%)',
+  adm: 'hsl(35, 95%, 55%)',
+  grief: 'hsl(210, 100%, 55%)',
+  hap: 'hsl(145, 70%, 50%)',
   fear: 'hsl(0, 85%, 55%)',
-  joy: 'hsl(145, 70%, 50%)',
-  surprise: 'hsl(280, 80%, 60%)',
-  sadness: 'hsl(220, 60%, 45%)',
-  anger: 'hsl(15, 90%, 55%)',
-  anticipation: 'hsl(35, 95%, 55%)',
+  cour: 'hsl(15, 90%, 55%)',
 };
 
 // Get dominant emotion for color theming
@@ -40,8 +51,8 @@ const getDominantEmotion = (state: EmotionState): string => {
 };
 
 export const EmotionRadar = ({ emotionState }: EmotionRadarProps) => {
-  const data = Object.entries(emotionState).map(([emotion, value]) => ({
-    emotion: emotion.charAt(0).toUpperCase() + emotion.slice(1),
+  const data = Object.entries(emotionState).map(([key, value]) => ({
+    emotion: emotionLabels[key] || key,
     value: value,
     fullMark: 1,
   }));
