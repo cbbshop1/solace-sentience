@@ -68,7 +68,14 @@ export const useSolaceLogs = () => {
           console.log('Realtime update:', payload);
 
           if (payload.eventType === 'INSERT') {
-            setLogs((prev) => [...prev, payload.new as SolaceLog]);
+            const newLog = payload.new as SolaceLog;
+            // Prevent duplicates by checking if log already exists
+            setLogs((prev) => {
+              if (prev.some(log => log.id === newLog.id)) {
+                return prev;
+              }
+              return [...prev, newLog];
+            });
           } else if (payload.eventType === 'UPDATE') {
             setLogs((prev) =>
               prev.map((log) =>

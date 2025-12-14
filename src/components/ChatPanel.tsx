@@ -18,8 +18,11 @@ export const ChatPanel = ({ messages }: ChatPanelProps) => {
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    const timer = setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [messages.length]);
 
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString('en-US', {
