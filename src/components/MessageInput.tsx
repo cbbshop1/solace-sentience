@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface MessageInputProps {
   onSend: (message: string) => void;
@@ -10,25 +10,49 @@ interface MessageInputProps {
 
 export const MessageInput = ({ onSend, disabled }: MessageInputProps) => {
   const [message, setMessage] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim() && !disabled) {
       onSend(message.trim());
       setMessage('');
+      // Reset textarea height
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
+  const handleInput = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 150)}px`;
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="relative">
-      <div className="cyber-card p-2 flex gap-2 items-center">
+      <div className="cyber-card p-2 flex gap-2 items-end">
         <div className="flex-1 relative">
-          <Input
+          <Textarea
+            ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            onInput={handleInput}
+            onKeyDown={handleKeyDown}
             placeholder="Enter dialogue..."
             disabled={disabled}
-            className="bg-background border-none font-sans text-sm placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary/50 pr-4"
+            rows={1}
+            className="bg-background border-none font-sans text-sm placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary/50 pr-4 min-h-[40px] max-h-[150px] resize-none"
           />
           <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-card to-transparent pointer-events-none" />
         </div>
