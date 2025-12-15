@@ -14,9 +14,31 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          is_archived: boolean
+          title: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          title?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_archived?: boolean
+          title?: string | null
+        }
+        Relationships: []
+      }
       solace_logs: {
         Row: {
           ai_response: string | null
+          conversation_id: string | null
           created_at: string
           emotion_state: Json | null
           id: number
@@ -25,6 +47,7 @@ export type Database = {
         }
         Insert: {
           ai_response?: string | null
+          conversation_id?: string | null
           created_at?: string
           emotion_state?: Json | null
           id?: number
@@ -33,13 +56,22 @@ export type Database = {
         }
         Update: {
           ai_response?: string | null
+          conversation_id?: string | null
           created_at?: string
           emotion_state?: Json | null
           id?: number
           trust_score?: number | null
           user_txt?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "solace_logs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

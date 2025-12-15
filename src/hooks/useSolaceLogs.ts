@@ -2,37 +2,58 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface EmotionState {
+  vuln: number;
+  conf: number;
+  trust: number;
+  adm: number;
+  grief: number;
+  hap: number;
+  fear: number;
+  cour: number;
+}
+
 interface SolaceLog {
   id: number;
   created_at: string;
   user_txt: string | null;
   ai_response: string | null;
-  emotion_state: {
-    vuln: number;
-    conf: number;
-    trust: number;
-    adm: number;
-    grief: number;
-    hap: number;
-    fear: number;
-    cour: number;
-  };
+  emotion_state: EmotionState;
   trust_score: number | null;
+  conversation_id: string | null;
 }
 
-export const useSolaceLogs = () => {
+const DEFAULT_EMOTION_STATE: EmotionState = {
+  vuln: 0.5,
+  conf: 0.5,
+  trust: 0.5,
+  adm: 0.5,
+  grief: 0.5,
+  hap: 0.5,
+  fear: 0.5,
+  cour: 0.5,
+};
+
+export const useSolaceLogs = (conversationId: string | null) => {
   const [logs, setLogs] = useState<SolaceLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'syncing'>('syncing');
   const { toast } = useToast();
 
-  // Fetch initial logs
+  // Fetch logs for current conversation
   useEffect(() => {
+    if (!conversationId) {
+      setLogs([]);
+      setLoading(false);
+      return;
+    }
+
     const fetchLogs = async () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('solace_logs')
         .select('*')
+        .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -43,32 +64,43 @@ export const useSolaceLogs = () => {
           variant: 'destructive',
         });
         setConnectionStatus('disconnected');
-      } else {
-        setLogs((data || []) as SolaceLog[]);
+      } else if (data) {
+        // Cast the data properly
+        const typedLogs = data.map(log => ({
+          ...log,
+          emotion_state: (log.emotion_state as unknown as EmotionState) || DEFAULT_EMOTION_STATE,
+        })) as SolaceLog[];
+        setLogs(typedLogs);
         setConnectionStatus('connected');
       }
       setLoading(false);
     };
 
     fetchLogs();
-  }, [toast]);
+  }, [conversationId, toast]);
 
-  // Subscribe to realtime updates
+  // Subscribe to realtime updates for current conversation
   useEffect(() => {
+    if (!conversationId) return;
+
     const channel = supabase
-      .channel('solace-realtime')
+      .channel(`solace-realtime-${conversationId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'solace_logs',
+          filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
           console.log('Realtime update:', payload);
 
           if (payload.eventType === 'INSERT') {
-            const newLog = payload.new as SolaceLog;
+            const newLog = {
+              ...payload.new,
+              emotion_state: (payload.new.emotion_state as unknown as EmotionState) || DEFAULT_EMOTION_STATE,
+            } as SolaceLog;
             // Prevent duplicates by checking if log already exists
             setLogs((prev) => {
               if (prev.some(log => log.id === newLog.id)) {
@@ -77,9 +109,13 @@ export const useSolaceLogs = () => {
               return [...prev, newLog];
             });
           } else if (payload.eventType === 'UPDATE') {
+            const updatedLog = {
+              ...payload.new,
+              emotion_state: (payload.new.emotion_state as unknown as EmotionState) || DEFAULT_EMOTION_STATE,
+            } as SolaceLog;
             setLogs((prev) =>
               prev.map((log) =>
-                log.id === (payload.new as SolaceLog).id ? (payload.new as SolaceLog) : log
+                log.id === updatedLog.id ? updatedLog : log
               )
             );
           } else if (payload.eventType === 'DELETE') {
@@ -98,21 +134,12 @@ export const useSolaceLogs = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [conversationId]);
 
   // Get latest emotion state
   const latestEmotionState = logs.length > 0 
     ? logs[logs.length - 1].emotion_state 
-    : {
-        vuln: 0.5,
-        conf: 0.5,
-        trust: 0.5,
-        adm: 0.5,
-        grief: 0.5,
-        hap: 0.5,
-        fear: 0.5,
-        cour: 0.5,
-      };
+    : DEFAULT_EMOTION_STATE;
 
   // Get latest trust score
   const latestTrustScore = logs.length > 0 
@@ -121,24 +148,34 @@ export const useSolaceLogs = () => {
 
   // Send message
   const sendMessage = async (message: string) => {
-    // Option 1: Save directly to DB
+    if (!conversationId) {
+      toast({
+        title: 'Error',
+        description: 'No active conversation',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Save to DB - cast emotion_state to satisfy TypeScript
     const { error: dbError } = await supabase.from('solace_logs').insert({
       user_txt: message,
       ai_response: null,
-      emotion_state: latestEmotionState,
+      emotion_state: latestEmotionState as unknown as null,
       trust_score: latestTrustScore,
-    });
+      conversation_id: conversationId,
+    } as { user_txt: string; ai_response: null; trust_score: number; conversation_id: string });
 
     if (dbError) {
       console.error('DB error:', dbError);
     }
 
-    // Option 2: Also try the local API
+    // Also try the local API
     try {
       const response = await fetch('http://localhost:8000/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, conversation_id: conversationId }),
       });
       
       if (!response.ok) {
