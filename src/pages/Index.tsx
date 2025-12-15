@@ -3,18 +3,31 @@ import { EmotionRadar } from '@/components/EmotionRadar';
 import { TrustRing } from '@/components/TrustRing';
 import { ChatPanel } from '@/components/ChatPanel';
 import { MessageInput } from '@/components/MessageInput';
+import { ConversationSidebar } from '@/components/ConversationSidebar';
 import { useSolaceLogs } from '@/hooks/useSolaceLogs';
+import { useConversations } from '@/hooks/useConversations';
 import { Loader2 } from 'lucide-react';
 
 const Index = () => {
   const {
+    conversations,
+    activeConversationId,
+    setActiveConversationId,
+    loading: conversationsLoading,
+    createConversation,
+    archiveConversation,
+  } = useConversations();
+
+  const {
     logs,
-    loading,
+    loading: logsLoading,
     connectionStatus,
     latestEmotionState,
     latestTrustScore,
     sendMessage,
-  } = useSolaceLogs();
+  } = useSolaceLogs(activeConversationId);
+
+  const loading = conversationsLoading || logsLoading;
 
   return (
     <div className="min-h-screen bg-background cyber-grid">
@@ -22,9 +35,20 @@ const Index = () => {
       <SolaceHeader connectionStatus={connectionStatus} />
 
       {/* Main content */}
-      <div className="flex flex-col lg:flex-row h-[calc(100vh-73px)]">
+      <div className="flex h-[calc(100vh-73px)]">
+        {/* Thread Sidebar */}
+        <div className="w-[200px] border-r border-border bg-card/30">
+          <ConversationSidebar
+            conversations={conversations}
+            activeConversationId={activeConversationId}
+            onSelect={setActiveConversationId}
+            onNewThread={() => createConversation()}
+            onArchive={archiveConversation}
+          />
+        </div>
+
         {/* Left Panel - The Manifold */}
-        <div className="w-full lg:w-[400px] border-r border-border p-6 flex flex-col gap-8">
+        <div className="w-[400px] border-r border-border p-6 flex flex-col gap-8">
           {/* Section label */}
           <div className="flex items-center gap-2">
             <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
@@ -90,7 +114,7 @@ const Index = () => {
 
           {/* Input area */}
           <div className="p-6 pt-2">
-            <MessageInput onSend={sendMessage} disabled={loading} />
+            <MessageInput onSend={sendMessage} disabled={loading || !activeConversationId} />
           </div>
         </div>
       </div>
