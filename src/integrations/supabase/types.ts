@@ -40,6 +40,7 @@ export type Database = {
           ai_response: string | null
           conversation_id: string | null
           created_at: string
+          embedding: string | null
           emotion_state: Json | null
           id: number
           trust_score: number | null
@@ -49,6 +50,7 @@ export type Database = {
           ai_response?: string | null
           conversation_id?: string | null
           created_at?: string
+          embedding?: string | null
           emotion_state?: Json | null
           id?: number
           trust_score?: number | null
@@ -58,6 +60,7 @@ export type Database = {
           ai_response?: string | null
           conversation_id?: string | null
           created_at?: string
+          embedding?: string | null
           emotion_state?: Json | null
           id?: number
           trust_score?: number | null
@@ -78,7 +81,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      match_memories: {
+        Args: {
+          match_count: number
+          match_threshold: number
+          query_embedding: string
+        }
+        Returns: {
+          ai_response: string
+          conversation_id: string
+          created_at: string
+          similarity: number
+          user_txt: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
