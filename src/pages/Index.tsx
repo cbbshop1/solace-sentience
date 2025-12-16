@@ -1,6 +1,6 @@
 import { SolaceHeader } from '@/components/SolaceHeader';
 import { EmotionRadar } from '@/components/EmotionRadar';
-import { TrustRing } from '@/components/TrustRing';
+import { EmotionScores } from '@/components/EmotionScores';
 import { ChatPanel } from '@/components/ChatPanel';
 import { MessageInput } from '@/components/MessageInput';
 import { ConversationSidebar } from '@/components/ConversationSidebar';
@@ -63,14 +63,9 @@ const Index = () => {
             <EmotionRadar emotionState={latestEmotionState} />
           </div>
 
-          {/* Trust Ring */}
-          <div className="cyber-card p-8 flex flex-col items-center">
-            <TrustRing score={latestTrustScore} />
-            <div className="mt-6 text-center">
-              <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest">
-                Trust Trace
-              </span>
-            </div>
+          {/* Emotion Scores */}
+          <div className="cyber-card p-4">
+            <EmotionScores emotionState={latestEmotionState} />
           </div>
 
           {/* Metrics ticker */}
