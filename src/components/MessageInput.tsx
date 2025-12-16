@@ -1,14 +1,15 @@
 import { useState, useRef } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
 interface MessageInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
+  isSending?: boolean;
 }
 
-export const MessageInput = ({ onSend, disabled }: MessageInputProps) => {
+export const MessageInput = ({ onSend, disabled, isSending }: MessageInputProps) => {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -60,10 +61,14 @@ export const MessageInput = ({ onSend, disabled }: MessageInputProps) => {
         <Button 
           type="submit" 
           size="icon"
-          disabled={!message.trim() || disabled}
+          disabled={!message.trim() || disabled || isSending}
           className="bg-primary hover:bg-primary/80 text-primary-foreground shrink-0 transition-all duration-200 disabled:opacity-30"
         >
-          <Send className="h-4 w-4" />
+          {isSending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
         </Button>
       </div>
       
@@ -71,11 +76,11 @@ export const MessageInput = ({ onSend, disabled }: MessageInputProps) => {
       <div className="flex items-center gap-2 mt-2 px-2">
         <div 
           className={`w-1.5 h-1.5 rounded-full ${
-            disabled ? 'bg-destructive' : 'bg-joy'
+            isSending ? 'bg-accent' : disabled ? 'bg-destructive' : 'bg-joy'
           } animate-pulse`} 
         />
         <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
-          {disabled ? 'Processing...' : 'Ready'}
+          {isSending ? 'Thinking...' : disabled ? 'Processing...' : 'Ready'}
         </span>
       </div>
     </form>

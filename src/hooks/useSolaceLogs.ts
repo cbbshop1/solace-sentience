@@ -37,6 +37,7 @@ const DEFAULT_EMOTION_STATE: EmotionState = {
 export const useSolaceLogs = (conversationId: string | null) => {
   const [logs, setLogs] = useState<SolaceLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'syncing'>('syncing');
   const { toast } = useToast();
 
@@ -157,6 +158,8 @@ export const useSolaceLogs = (conversationId: string | null) => {
       return;
     }
 
+    setIsSending(true);
+
     // Send to Python API only - it handles all database logging
     try {
       const response = await fetch('http://localhost:8000/chat', {
@@ -180,12 +183,15 @@ export const useSolaceLogs = (conversationId: string | null) => {
         description: 'Could not reach the chat server',
         variant: 'destructive',
       });
+    } finally {
+      setIsSending(false);
     }
   };
 
   return {
     logs,
     loading,
+    isSending,
     connectionStatus,
     latestEmotionState,
     latestTrustScore,
