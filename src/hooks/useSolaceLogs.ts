@@ -146,7 +146,7 @@ export const useSolaceLogs = (conversationId: string | null) => {
     ? (logs[logs.length - 1].trust_score ?? 0.5)
     : 0.5;
 
-  // Send message
+  // Send message - only calls Python API, which handles all DB writes
   const sendMessage = async (message: string) => {
     if (!conversationId) {
       toast({
@@ -157,20 +157,7 @@ export const useSolaceLogs = (conversationId: string | null) => {
       return;
     }
 
-    // Save to DB - cast emotion_state to satisfy TypeScript
-    const { error: dbError } = await supabase.from('solace_logs').insert({
-      user_txt: message,
-      ai_response: null,
-      emotion_state: latestEmotionState as unknown as null,
-      trust_score: latestTrustScore,
-      conversation_id: conversationId,
-    } as { user_txt: string; ai_response: null; trust_score: number; conversation_id: string });
-
-    if (dbError) {
-      console.error('DB error:', dbError);
-    }
-
-    // Also try the local API
+    // Send to Python API only - it handles all database logging
     try {
       const response = await fetch('http://localhost:8000/chat', {
         method: 'POST',
@@ -179,11 +166,20 @@ export const useSolaceLogs = (conversationId: string | null) => {
       });
       
       if (!response.ok) {
-        console.log('Local API not available, message saved to DB only');
+        toast({
+          title: 'Error',
+          description: 'Failed to send message to API',
+          variant: 'destructive',
+        });
       }
+      // UI will update via realtime subscription when Python backend writes to DB
     } catch (err) {
-      // Local API not available, that's okay
-      console.log('Local API not reachable, message saved to DB');
+      console.error('API error:', err);
+      toast({
+        title: 'Connection Error',
+        description: 'Could not reach the chat server',
+        variant: 'destructive',
+      });
     }
   };
 
