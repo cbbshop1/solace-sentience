@@ -112,6 +112,11 @@
     font-family: var(--font-mono);
   }
 
+  /* Force Radix ScrollArea internal content wrapper to respect parent width */
+  [data-radix-scroll-area-viewport] > div {
+    width: 100% !important;
+    display: block !important;
+  }
 }
 
 @layer components {
