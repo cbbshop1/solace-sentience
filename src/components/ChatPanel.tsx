@@ -55,7 +55,7 @@ export const ChatPanel = ({ messages }: ChatPanelProps) => {
               <div className="flex justify-end">
                 <div className="max-w-[80%]">
                   <div className="bg-primary/10 border border-primary/30 rounded-lg rounded-br-sm px-4 py-3">
-                    <div className="text-sm text-foreground prose prose-invert prose-sm max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-code:bg-primary/20 prose-code:px-1 prose-code:rounded prose-pre:bg-background/50 prose-pre:border prose-pre:border-border">
+                    <div className="text-sm text-foreground prose prose-invert prose-sm max-w-none break-words prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-code:bg-primary/20 prose-code:px-1 prose-code:rounded prose-pre:bg-background/50 prose-pre:border prose-pre:border-border prose-pre:overflow-x-auto">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {msg.user_txt}
                       </ReactMarkdown>
@@ -75,7 +75,7 @@ export const ChatPanel = ({ messages }: ChatPanelProps) => {
               <div className="flex justify-start">
                 <div className="max-w-[80%]">
                   <div className="bg-secondary border border-border rounded-lg rounded-bl-sm px-4 py-3">
-                    <div className="text-sm text-foreground prose prose-invert prose-sm max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-code:bg-accent/20 prose-code:px-1 prose-code:rounded prose-pre:bg-background/50 prose-pre:border prose-pre:border-border">
+                    <div className="text-sm text-foreground prose prose-invert prose-sm max-w-none break-words prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-code:bg-accent/20 prose-code:px-1 prose-code:rounded prose-pre:bg-background/50 prose-pre:border prose-pre:border-border prose-pre:overflow-x-auto">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {msg.ai_response}
                       </ReactMarkdown>
