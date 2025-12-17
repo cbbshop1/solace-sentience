@@ -176,7 +176,7 @@ const Index = () => {
               </div>
 
               {/* Chat area */}
-              <div className="flex-1 px-6 overflow-hidden w-1">
+              <div className="flex-1 px-6 overflow-hidden min-w-0">
                 {loading ? (
                   <div className="h-full flex items-center justify-center">
                     <Loader2 className="h-6 w-6 text-primary animate-spin" />
