@@ -36,8 +36,8 @@ export const ChatPanel = ({ messages }: ChatPanelProps) => {
   };
 
   return (
-    <ScrollArea className="h-full pr-4" ref={scrollRef}>
-      <div className="space-y-4 py-4 w-full">
+    <ScrollArea className="h-full w-full pr-4" ref={scrollRef}>
+      <div className="space-y-4 py-4">
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-40 text-muted-foreground font-mono text-sm">
             <span className="opacity-50">// awaiting dialogue...</span>
