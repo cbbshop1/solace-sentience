@@ -37,7 +37,7 @@ export const ChatPanel = ({ messages }: ChatPanelProps) => {
 
   return (
     <ScrollArea className="h-full pr-4" ref={scrollRef}>
-      <div className="space-y-4 py-4">
+      <div className="space-y-4 py-4 w-full">
         {messages.length === 0 && (
           <div className="flex items-center justify-center h-40 text-muted-foreground font-mono text-sm">
             <span className="opacity-50">// awaiting dialogue...</span>
@@ -55,7 +55,7 @@ export const ChatPanel = ({ messages }: ChatPanelProps) => {
               <div className="flex justify-end min-w-0">
                 <div className="max-w-[80%] min-w-0">
                   <div className="bg-primary/10 border border-primary/30 rounded-lg rounded-br-sm px-4 py-3">
-                    <div className="text-sm text-foreground prose prose-invert prose-sm max-w-none break-words [overflow-wrap:anywhere] prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-code:bg-primary/20 prose-code:px-1 prose-code:rounded prose-pre:bg-background/50 prose-pre:border prose-pre:border-border prose-pre:overflow-x-auto">
+                    <div className="text-sm text-foreground prose prose-invert prose-sm break-words [overflow-wrap:anywhere] prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-code:bg-primary/20 prose-code:px-1 prose-code:rounded prose-pre:bg-background/50 prose-pre:border prose-pre:border-border prose-pre:overflow-x-auto">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {msg.user_txt}
                       </ReactMarkdown>
@@ -75,7 +75,7 @@ export const ChatPanel = ({ messages }: ChatPanelProps) => {
               <div className="flex justify-start min-w-0">
                 <div className="max-w-[80%] min-w-0">
                   <div className="bg-secondary border border-border rounded-lg rounded-bl-sm px-4 py-3">
-                    <div className="text-sm text-foreground prose prose-invert prose-sm max-w-none break-words [overflow-wrap:anywhere] prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-code:bg-accent/20 prose-code:px-1 prose-code:rounded prose-pre:bg-background/50 prose-pre:border prose-pre:border-border prose-pre:overflow-x-auto">
+                    <div className="text-sm text-foreground prose prose-invert prose-sm break-words [overflow-wrap:anywhere] prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-code:bg-accent/20 prose-code:px-1 prose-code:rounded prose-pre:bg-background/50 prose-pre:border prose-pre:border-border prose-pre:overflow-x-auto">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {msg.ai_response}
                       </ReactMarkdown>
@@ -94,7 +94,7 @@ export const ChatPanel = ({ messages }: ChatPanelProps) => {
         
         <div ref={bottomRef} />
       </div>
-      <ScrollBar orientation="horizontal" />
+      
     </ScrollArea>
   );
 };
