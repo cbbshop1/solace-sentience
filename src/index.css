@@ -111,6 +111,11 @@
   .font-mono {
     font-family: var(--font-mono);
   }
+
+  /* Fix Radix ScrollArea content width constraint */
+  [data-radix-scroll-area-viewport] > div {
+    max-width: 100%;
+  }
 }
 
 @layer components {
