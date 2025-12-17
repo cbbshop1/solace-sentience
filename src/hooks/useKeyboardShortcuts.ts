@@ -4,12 +4,14 @@ interface ShortcutHandlers {
   onNewThread?: () => void;
   onExport?: () => void;
   onSearch?: () => void;
+  onToggleSidebar?: () => void;
 }
 
 export const useKeyboardShortcuts = ({
   onNewThread,
   onExport,
   onSearch,
+  onToggleSidebar,
 }: ShortcutHandlers) => {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -37,9 +39,12 @@ export const useKeyboardShortcuts = ({
       } else if (modKey && e.key === 'k') {
         e.preventDefault();
         onSearch?.();
+      } else if (modKey && e.key === 'b') {
+        e.preventDefault();
+        onToggleSidebar?.();
       }
     },
-    [onNewThread, onExport, onSearch]
+    [onNewThread, onExport, onSearch, onToggleSidebar]
   );
 
   useEffect(() => {
