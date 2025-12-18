@@ -81,7 +81,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      match_memories: {
+      match_doctrine: {
         Args: {
           match_count: number
           match_threshold: number
@@ -89,12 +89,41 @@ export type Database = {
         }
         Returns: {
           ai_response: string
-          conversation_id: string
           created_at: string
           similarity: number
           user_txt: string
         }[]
       }
+      match_memories:
+        | {
+            Args: {
+              match_count: number
+              match_threshold: number
+              query_embedding: string
+            }
+            Returns: {
+              ai_response: string
+              conversation_id: string
+              created_at: string
+              similarity: number
+              user_txt: string
+            }[]
+          }
+        | {
+            Args: {
+              filter_conversation_id?: string
+              match_count: number
+              match_threshold: number
+              query_embedding: string
+            }
+            Returns: {
+              ai_response: string
+              conversation_id: string
+              created_at: string
+              similarity: number
+              user_txt: string
+            }[]
+          }
     }
     Enums: {
       [_ in never]: never
