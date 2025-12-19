@@ -36,6 +36,7 @@ const Index = () => {
     latestEmotionState,
     latestTrustScore,
     sendMessage,
+    cancelRequest,
   } = useSolaceLogs(activeConversationId);
 
   const loading = conversationsLoading || logsLoading;
@@ -189,7 +190,8 @@ const Index = () => {
               {/* Input area */}
               <div className="p-6 pt-2">
                 <MessageInput 
-                  onSend={sendMessage} 
+                  onSend={sendMessage}
+                  onCancel={cancelRequest}
                   disabled={loading || !activeConversationId} 
                   isSending={isSending}
                 />

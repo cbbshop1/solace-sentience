@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -40,6 +40,7 @@ export const useSolaceLogs = (conversationId: string | null) => {
   const [isSending, setIsSending] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'syncing'>('syncing');
   const { toast } = useToast();
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Fetch logs for current conversation
   useEffect(() => {
@@ -147,6 +148,19 @@ export const useSolaceLogs = (conversationId: string | null) => {
     ? (logs[logs.length - 1].trust_score ?? 0.5)
     : 0.5;
 
+  // Cancel ongoing request
+  const cancelRequest = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsSending(false);
+      toast({
+        title: 'Cancelled',
+        description: 'Response generation stopped',
+      });
+    }
+  }, [toast]);
+
   // Send message - only calls Python API, which handles all DB writes
   const sendMessage = async (message: string) => {
     if (!conversationId) {
@@ -158,6 +172,13 @@ export const useSolaceLogs = (conversationId: string | null) => {
       return;
     }
 
+    // Cancel any existing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
     setIsSending(true);
 
     // Send to Python API only - it handles all database logging
@@ -166,6 +187,7 @@ export const useSolaceLogs = (conversationId: string | null) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, conversation_id: conversationId }),
+        signal: abortControllerRef.current.signal,
       });
       
       if (!response.ok) {
@@ -177,6 +199,11 @@ export const useSolaceLogs = (conversationId: string | null) => {
       }
       // UI will update via realtime subscription when Python backend writes to DB
     } catch (err) {
+      // Don't show error toast for user-initiated cancellation
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log('Request cancelled by user');
+        return;
+      }
       console.error('API error:', err);
       toast({
         title: 'Connection Error',
@@ -184,6 +211,7 @@ export const useSolaceLogs = (conversationId: string | null) => {
         variant: 'destructive',
       });
     } finally {
+      abortControllerRef.current = null;
       setIsSending(false);
     }
   };
@@ -196,5 +224,6 @@ export const useSolaceLogs = (conversationId: string | null) => {
     latestEmotionState,
     latestTrustScore,
     sendMessage,
+    cancelRequest,
   };
 };
