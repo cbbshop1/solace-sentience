@@ -65,7 +65,7 @@ export const MessageInput = ({ onSend, onCancel, disabled, isSending }: MessageI
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('http://localhost:8000/upload', {
+      const response = await fetch('http://127.0.0.1:8000/upload', {
         method: 'POST',
         body: formData,
       });
@@ -74,10 +74,20 @@ export const MessageInput = ({ onSend, onCancel, disabled, isSending }: MessageI
         throw new Error(`Upload failed: ${response.statusText}`);
       }
 
-      toast({
-        title: "File archived to Solace's Library",
-        description: file.name,
-      });
+      const data = await response.json();
+      const fileContent = data.content;
+      
+      // Append file content to current message
+      const attachment = `[ATTACHED FILE: ${file.name}]\n${fileContent}\n[END ATTACHMENT]\n`;
+      setMessage(prev => prev + attachment);
+      
+      // Auto-resize textarea after content is appended
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+          textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
+        }
+      }, 0);
     } catch (error) {
       toast({
         title: "Upload failed",
@@ -86,7 +96,6 @@ export const MessageInput = ({ onSend, onCancel, disabled, isSending }: MessageI
       });
     } finally {
       setIsUploading(false);
-      // Reset file input so the same file can be selected again
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
