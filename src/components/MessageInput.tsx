@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
-import { Send, Square } from 'lucide-react';
+import { Send, Square, Paperclip, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 
 interface MessageInputProps {
   onSend: (message: string) => void;
@@ -12,7 +13,10 @@ interface MessageInputProps {
 
 export const MessageInput = ({ onSend, onCancel, disabled, isSending }: MessageInputProps) => {
   const [message, setMessage] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,9 +51,73 @@ export const MessageInput = ({ onSend, onCancel, disabled, isSending }: MessageI
     }
   };
 
+  const handleFileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('http://localhost:8000/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+
+      toast({
+        title: "File archived to Solace's Library",
+        description: file.name,
+      });
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : "Could not upload file",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      // Reset file input so the same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="relative">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,.txt,.md"
+        onChange={handleFileChange}
+        className="hidden"
+      />
       <div className="cyber-card p-2 flex gap-2 items-end">
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          onClick={handleFileClick}
+          disabled={isUploading || disabled}
+          className="shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          title="Upload file"
+        >
+          {isUploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Paperclip className="h-4 w-4" />
+          )}
+        </Button>
         <div className="flex-1 relative">
           <Textarea
             ref={textareaRef}
