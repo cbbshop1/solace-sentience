@@ -96,7 +96,7 @@ export type Database = {
       }
       match_memories: {
         Args: {
-          filter_conversation_id?: string
+          filter_conversation_id: string
           match_count: number
           match_threshold: number
           query_embedding: string
