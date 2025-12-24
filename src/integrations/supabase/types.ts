@@ -43,6 +43,7 @@ export type Database = {
           embedding: string | null
           emotion_state: Json | null
           id: number
+          reasoning: string | null
           trust_score: number | null
           user_txt: string | null
         }
@@ -53,6 +54,7 @@ export type Database = {
           embedding?: string | null
           emotion_state?: Json | null
           id?: number
+          reasoning?: string | null
           trust_score?: number | null
           user_txt?: string | null
         }
@@ -63,6 +65,7 @@ export type Database = {
           embedding?: string | null
           emotion_state?: Json | null
           id?: number
+          reasoning?: string | null
           trust_score?: number | null
           user_txt?: string | null
         }
