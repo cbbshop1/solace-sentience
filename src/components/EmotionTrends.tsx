@@ -63,8 +63,8 @@ export const EmotionTrends = ({ logs }: EmotionTrendsProps) => {
               <span className="font-mono text-[10px] text-muted-foreground w-12 truncate">
                 {config.label.slice(0, 4)}
               </span>
-              <div className="flex-1 h-6">
-                <ResponsiveContainer width="100%" height="100%">
+              <div className="flex-1 h-6 min-w-0">
+                <ResponsiveContainer width="100%" height="100%" minWidth={50}>
                   <LineChart data={data}>
                     <Line
                       type="monotone"
