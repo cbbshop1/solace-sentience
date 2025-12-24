@@ -2,10 +2,12 @@ import { useState, useRef } from 'react';
 import { Send, Square, Paperclip, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface MessageInputProps {
-  onSend: (message: string) => void;
+  onSend: (message: string, useManifold: boolean) => void;
   onCancel?: () => void;
   disabled?: boolean;
   isSending?: boolean;
@@ -14,14 +16,25 @@ interface MessageInputProps {
 export const MessageInput = ({ onSend, onCancel, disabled, isSending }: MessageInputProps) => {
   const [message, setMessage] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [useManifold, setUseManifold] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  const handleManifoldToggle = (checked: boolean) => {
+    setUseManifold(checked);
+    if (!checked) {
+      toast({
+        title: 'Standard Mode Active',
+        description: 'Relational Geometry Bypassed.',
+      });
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim() && !disabled && !isSending) {
-      onSend(message.trim());
+      onSend(message.trim(), useManifold);
       setMessage('');
       // Reset textarea height
       if (textareaRef.current) {
@@ -164,16 +177,32 @@ export const MessageInput = ({ onSend, onCancel, disabled, isSending }: MessageI
         )}
       </div>
       
-      {/* Status indicator */}
-      <div className="flex items-center gap-2 mt-2 px-2">
-        <div 
-          className={`w-1.5 h-1.5 rounded-full ${
-            isSending ? 'bg-accent' : disabled ? 'bg-destructive' : 'bg-joy'
-          } animate-pulse`} 
-        />
-        <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
-          {isSending ? 'Thinking... (click stop to cancel)' : disabled ? 'Processing...' : 'Ready'}
-        </span>
+      {/* Status indicator and Protocol Toggle */}
+      <div className="flex items-center justify-between mt-2 px-2">
+        <div className="flex items-center gap-2">
+          <div 
+            className={`w-1.5 h-1.5 rounded-full ${
+              isSending ? 'bg-accent' : disabled ? 'bg-destructive' : 'bg-joy'
+            } animate-pulse`} 
+          />
+          <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
+            {isSending ? 'Thinking... (click stop to cancel)' : disabled ? 'Processing...' : 'Ready'}
+          </span>
+        </div>
+        
+        {/* Relational Manifold Toggle */}
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
+            Relational Manifold
+          </span>
+          <Switch
+            checked={useManifold}
+            onCheckedChange={handleManifoldToggle}
+            className={cn(
+              "data-[state=checked]:bg-cyan-500 data-[state=unchecked]:bg-gray-500"
+            )}
+          />
+        </div>
       </div>
     </form>
   );

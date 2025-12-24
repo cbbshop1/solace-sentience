@@ -162,7 +162,7 @@ export const useSolaceLogs = (conversationId: string | null) => {
   }, [toast]);
 
   // Send message - only calls Python API, which handles all DB writes
-  const sendMessage = async (message: string) => {
+  const sendMessage = async (message: string, useManifold: boolean = true) => {
     if (!conversationId) {
       toast({
         title: 'Error',
@@ -186,7 +186,7 @@ export const useSolaceLogs = (conversationId: string | null) => {
       const response = await fetch('http://localhost:8000/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, conversation_id: conversationId }),
+        body: JSON.stringify({ message, conversation_id: conversationId, use_manifold: useManifold }),
         signal: abortControllerRef.current.signal,
       });
       
