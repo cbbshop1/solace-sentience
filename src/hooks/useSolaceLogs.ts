@@ -18,6 +18,7 @@ interface SolaceLog {
   created_at: string;
   user_txt: string | null;
   ai_response: string | null;
+  reasoning: string | null;
   emotion_state: EmotionState;
   trust_score: number | null;
   conversation_id: string | null;
