@@ -24,6 +24,12 @@ interface SolaceLog {
   conversation_id: string | null;
 }
 
+export interface PendingMessage {
+  id: string;
+  user_txt: string;
+  created_at: string;
+}
+
 const DEFAULT_EMOTION_STATE: EmotionState = {
   vuln: 0.5,
   conf: 0.5,
@@ -40,8 +46,11 @@ export const useSolaceLogs = (conversationId: string | null) => {
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'syncing'>('syncing');
+  const [pendingMessage, setPendingMessage] = useState<PendingMessage | null>(null);
+  const [isPolling, setIsPolling] = useState(false);
   const { toast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch logs for current conversation
   useEffect(() => {
@@ -149,20 +158,72 @@ export const useSolaceLogs = (conversationId: string | null) => {
     ? (logs[logs.length - 1].trust_score ?? 0.5)
     : 0.5;
 
+  // Stop polling helper
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    setIsPolling(false);
+  }, []);
+
+  // Poll for response
+  const pollForResponse = useCallback((convId: string) => {
+    setIsPolling(true);
+    
+    pollingIntervalRef.current = setInterval(async () => {
+      try {
+        const response = await fetch(`http://localhost:8000/status/${convId}`);
+        const data = await response.json();
+        
+        if (data.status === 'ready') {
+          stopPolling();
+          setPendingMessage(null);
+          setIsSending(false);
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    }, 500);
+  }, [stopPolling]);
+
   // Cancel ongoing request
   const cancelRequest = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
-      setIsSending(false);
-      toast({
-        title: 'Cancelled',
-        description: 'Response generation stopped',
-      });
     }
-  }, [toast]);
+    
+    stopPolling();
+    setPendingMessage(null);
+    setIsSending(false);
+    
+    toast({
+      title: 'Cancelled',
+      description: 'Response generation stopped',
+    });
+  }, [toast, stopPolling]);
 
-  // Send message - only calls Python API, which handles all DB writes
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Clear pending message when realtime delivers the confirmed message
+  useEffect(() => {
+    if (pendingMessage && logs.length > 0) {
+      const lastLog = logs[logs.length - 1];
+      if (lastLog.user_txt === pendingMessage.user_txt) {
+        setPendingMessage(null);
+      }
+    }
+  }, [logs, pendingMessage]);
+
+  // Send message - shows instantly, then polls for response
   const sendMessage = async (message: string, useManifold: boolean = true) => {
     if (!conversationId) {
       toast({
@@ -177,12 +238,21 @@ export const useSolaceLogs = (conversationId: string | null) => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
+    stopPolling();
 
     // Create new abort controller
     abortControllerRef.current = new AbortController();
     setIsSending(true);
 
-    // Send to Python API only - it handles all database logging
+    // 1. Immediately show pending message
+    const tempId = `pending-${Date.now()}`;
+    setPendingMessage({
+      id: tempId,
+      user_txt: message,
+      created_at: new Date().toISOString(),
+    });
+
+    // 2. Send to Python API
     try {
       const response = await fetch('http://localhost:8000/chat', {
         method: 'POST',
@@ -192,13 +262,26 @@ export const useSolaceLogs = (conversationId: string | null) => {
       });
       
       if (!response.ok) {
+        setPendingMessage(null);
+        setIsSending(false);
         toast({
           title: 'Error',
           description: 'Failed to send message to API',
           variant: 'destructive',
         });
+        return;
       }
-      // UI will update via realtime subscription when Python backend writes to DB
+
+      const data = await response.json();
+      
+      // 3. Start polling if processing
+      if (data.status === 'processing') {
+        pollForResponse(conversationId);
+      } else {
+        // Response was immediate (legacy behavior fallback)
+        setPendingMessage(null);
+        setIsSending(false);
+      }
     } catch (err) {
       // Don't show error toast for user-initiated cancellation
       if (err instanceof Error && err.name === 'AbortError') {
@@ -206,6 +289,8 @@ export const useSolaceLogs = (conversationId: string | null) => {
         return;
       }
       console.error('API error:', err);
+      setPendingMessage(null);
+      setIsSending(false);
       toast({
         title: 'Connection Error',
         description: 'Could not reach the chat server',
@@ -213,7 +298,6 @@ export const useSolaceLogs = (conversationId: string | null) => {
       });
     } finally {
       abortControllerRef.current = null;
-      setIsSending(false);
     }
   };
 
@@ -226,5 +310,7 @@ export const useSolaceLogs = (conversationId: string | null) => {
     latestTrustScore,
     sendMessage,
     cancelRequest,
+    pendingMessage,
+    isPolling,
   };
 };
