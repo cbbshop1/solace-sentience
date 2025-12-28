@@ -37,6 +37,8 @@ const Index = () => {
     latestTrustScore,
     sendMessage,
     cancelRequest,
+    pendingMessage,
+    isPolling,
   } = useSolaceLogs(activeConversationId);
 
   const loading = conversationsLoading || logsLoading;
@@ -183,7 +185,7 @@ const Index = () => {
                     <Loader2 className="h-6 w-6 text-primary animate-spin" />
                   </div>
                 ) : (
-                  <ChatPanel messages={logs} />
+                  <ChatPanel messages={logs} pendingMessage={pendingMessage} isPolling={isPolling} />
                 )}
               </div>
 

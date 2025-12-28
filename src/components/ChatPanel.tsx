@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ReasoningAccordion } from './ReasoningAccordion';
+import type { PendingMessage } from '@/hooks/useSolaceLogs';
 
 interface ChatMessage {
   id: number;
@@ -14,19 +15,52 @@ interface ChatMessage {
 
 interface ChatPanelProps {
   messages: ChatMessage[];
+  pendingMessage?: PendingMessage | null;
+  isPolling?: boolean;
 }
 
-export const ChatPanel = ({ messages }: ChatPanelProps) => {
+const ThinkingIndicator = () => (
+  <div className="flex justify-start min-w-0 animate-fade-in">
+    <div className="max-w-[80%] min-w-0">
+      <div className="bg-secondary border border-border rounded-lg rounded-bl-sm px-4 py-3">
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            <span 
+              className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" 
+              style={{ animationDelay: '0ms' }} 
+            />
+            <span 
+              className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" 
+              style={{ animationDelay: '150ms' }} 
+            />
+            <span 
+              className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" 
+              style={{ animationDelay: '300ms' }} 
+            />
+          </div>
+          <span className="text-xs text-muted-foreground font-mono">processing...</span>
+        </div>
+      </div>
+      <div className="flex justify-start mt-1">
+        <span className="font-mono text-[10px] text-muted-foreground">
+          SOLACE :: thinking...
+        </span>
+      </div>
+    </div>
+  </div>
+);
+
+export const ChatPanel = ({ messages, pendingMessage, isPolling }: ChatPanelProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom on new messages or pending message
   useEffect(() => {
     const timer = setTimeout(() => {
       bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }, 100);
     return () => clearTimeout(timer);
-  }, [messages.length]);
+  }, [messages.length, pendingMessage, isPolling]);
 
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString('en-US', {
@@ -96,6 +130,29 @@ export const ChatPanel = ({ messages }: ChatPanelProps) => {
             )}
           </div>
         ))}
+
+        {/* Pending user message (optimistic) */}
+        {pendingMessage && (
+          <div className="space-y-3 animate-fade-in">
+            <div className="flex justify-end min-w-0">
+              <div className="max-w-[80%] min-w-0">
+                <div className="bg-primary/10 border border-primary/30 rounded-lg rounded-br-sm px-4 py-3">
+                  <div className="text-sm text-foreground">
+                    {pendingMessage.user_txt}
+                  </div>
+                </div>
+                <div className="flex justify-end mt-1">
+                  <span className="font-mono text-[10px] text-muted-foreground">
+                    {formatTime(pendingMessage.created_at)} :: USER
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Thinking indicator */}
+        {isPolling && <ThinkingIndicator />}
         
         <div ref={bottomRef} />
       </div>
