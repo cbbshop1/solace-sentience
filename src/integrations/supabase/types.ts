@@ -35,6 +35,33 @@ export type Database = {
         }
         Relationships: []
       }
+      doctrine: {
+        Row: {
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          source: string | null
+          title: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          source?: string | null
+          title?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          source?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
       solace_logs: {
         Row: {
           ai_response: string | null
@@ -91,10 +118,11 @@ export type Database = {
           query_embedding: string
         }
         Returns: {
-          ai_response: string
-          created_at: string
+          content: string
+          id: string
           similarity: number
-          user_txt: string
+          source: string
+          title: string
         }[]
       }
       match_memories: {
